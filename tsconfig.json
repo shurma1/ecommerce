@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "module": "CommonJS", // Определяет тип импорта кода в итоговом файле, прописанном в "outFile". Необходимо задавать при использовании опции "outFile".
+    "outDir": "./build",
+    "jsx": "react-jsx",
+    "allowJs": true,
+    "removeComments": true,
+    "target": "ES5",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true
+  },
+  "ts-node": {
+    "compilerOptions": {
+      "module": "CommonJS"
+    }
+  }
+}
