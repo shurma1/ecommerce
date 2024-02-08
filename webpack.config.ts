@@ -1,56 +1,26 @@
 import path from "path";
-import MiniCssExtractPlugin from "mini-css-extract-plugin";
-import HtmlWebpackPlugin from "html-webpack-plugin";
+import {BuildEnv, BuildPaths} from "./config/build/types/config";
+import {buildWebpackConfig} from "./config/build/buildWebpackConfig";
 
 
-export default {
-    mode: 'development',
-    entry: path.resolve(__dirname, 'src', 'index.tsx'),
-    output: {
-    path: path.resolve(__dirname, 'dist'),
-        filename: 'bundle.[hash].js',
-        clean: true
-    },
-    plugins: [
-        new MiniCssExtractPlugin({
-            filename: "[name].[contenthash].css"
-        }),
-        new HtmlWebpackPlugin({
-            template: path.resolve(__dirname, 'public')
-        }),
-    ],
-    resolve: {
-        extensions: [ '.tsx', '.ts', '.js' ],
-    },
-    module: {
-        rules: [
-        {
-            test: /\.tsx?$/,
-            use: 'ts-loader',
-            exclude: /node_modules/,
-        },
-        {
-            test: /\.s[ac]ss$/i,
-            use: [
-                MiniCssExtractPlugin.loader,
-                {
-                    loader: "css-loader",
-                    options: {
-                        modules: {
-                            auto: (resPath: string) => Boolean(resPath.includes('.module.')),
-                            localIdentName: '[hash:base64:8]'
-                        },
-                    }
-                },
-                "sass-loader",
-            ],
-        }
-        ],
-    },
-    devServer: {
-        port: 3000,
-        open: true,
-        historyApiFallback: true,
-    },
+export default (env: BuildEnv) => {
+
+    const paths: BuildPaths = {
+        entry: path.resolve(__dirname, 'src', 'index.tsx'),
+        build: path.resolve(__dirname, 'dist'),
+        template: path.resolve(__dirname, 'public', 'index.html')
+    }
+
+    const port = env.port || 3000;
+    const mode = env.mode || 'development';
+
+    const isDev = mode === 'development';
+
+    return buildWebpackConfig({
+        mode,
+        paths,
+        isDev,
+        port
+    })
 
 }
