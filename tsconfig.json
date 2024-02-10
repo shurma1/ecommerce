@@ -9,6 +9,17 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "strictNullChecks": true,
+    "baseUrl": "./",
+    "paths": {
+      "@config/*": ["config/*"],
+      "@types/*": ["src/types/*"],
+      "@components/*": ["src/components/*"],
+      "@UI/*": ["src/UI/*"],
+      "@styles/*": ["src/styles/*"],
+      "@helpers/*": ["src/helpers/*"],
+      "@hooks/*": ["src/hooks/*"],
+      "@ROOT/*": ["*"]
+    }
   },
   "ts-node": {
     "compilerOptions": {
