@@ -1,46 +1,13 @@
 import {RefObject, useEffect} from 'react';
+import classes from './useRipple.module.scss';
 
-const ROOT_ANIMATION_NAME = 'use-ripple-';
-const ANIMATION_OPACITY = ROOT_ANIMATION_NAME+ 'opacity-animation';
-const ANIMATION_SCALE = ROOT_ANIMATION_NAME+ 'scale-animation';
 
-const SCALE_FACTOR = 10;
-
-if (typeof document !== 'undefined') {
-    const style = document.createElement('style');
-
-    style.innerHTML = `
-    @keyframes ${ANIMATION_OPACITY} {
-      from {
-        opacity: 1;
-      }
-      to {
-        opacity: 0;
-      }
-    }
-    @keyframes ${ANIMATION_SCALE} {
-      from {
-        transform: scale(0);
-      }
-      to {
-        transform: scale(${SCALE_FACTOR});
-      }
-    }
-    `;
-
-    document.querySelector('head')?.appendChild(style);
-}
-
-const RIPPLE_DEFAULT_OPTIONS = {
-    SIZE: 50,
-    DURATION: 500,
-    COLOR: 'rgba(255, 255, 255, 0.17)',
-};
+const RIPPLE_DEFAULT_COLOR = 'rgba(255, 255, 255, 0.17)';
+const RIPPLE_DEFAULT_DURATION = 700;
 
 interface RippleOptions {
     disabled: boolean;
     color?: string;
-    size?: number;
     duration?: number;
 }
 
@@ -62,9 +29,9 @@ const createRipple = (
 ) => (
     event?: Event
 ) => {
-
     const clientX = event?.clientX || defaultEvent.clientX;
     const clientY = event?.clientY || defaultEvent.clientY;
+    const timeStamp = Date.now();
 
     const {
         height,
@@ -76,7 +43,7 @@ const createRipple = (
     const x = clientX - left;
     const y = clientY - top;
 
-    const rippleSize = options?.size || RIPPLE_DEFAULT_OPTIONS.SIZE;
+    const rippleSize = Math.max(height, width);
 
     const positionTop = clientX
         ? y - rippleSize / 2
@@ -86,34 +53,45 @@ const createRipple = (
         ? x - rippleSize / 2
         : width / 2 - rippleSize / 2;
 
+    const duration = options?.duration || RIPPLE_DEFAULT_DURATION;
+
     const span = document.createElement('span');
+
+    span.style.cssText = `
+        --ripple-duration: ${duration}ms;
+    `;
 
     span.style.top = `${positionTop}px`;
     span.style.left = `${positionLeft}px`;
-    span.style.position = 'absolute';
-    span.style.borderRadius = '50%';
-    span.style.backgroundColor = options?.color || RIPPLE_DEFAULT_OPTIONS.COLOR;
-    span.style.pointerEvents = 'none';
     span.style.width = `${rippleSize}px`;
     span.style.height = `${rippleSize}px`;
-    span.style.transition = `${options?.duration || RIPPLE_DEFAULT_OPTIONS.DURATION}ms ease-in`;
-    span.style.transform = `scale(${SCALE_FACTOR})`;
-    span.style.animation = `${ANIMATION_SCALE} ${options?.duration || RIPPLE_DEFAULT_OPTIONS.DURATION}ms ease-in`;
+    span.style.backgroundColor = options?.color || RIPPLE_DEFAULT_COLOR;
+    span.style.opacity = '0';
+
+    span.classList.add(classes.ripple);
+
     element.appendChild(span);
+    window.getComputedStyle(span).opacity; // костыль для плавного появления ripple
+    span.style.opacity = '1';
 
     const handleMouseUp = () => {
-        element.removeEventListener('mouseup',handleMouseUp);
-        span.style.animation += `, ${ANIMATION_OPACITY} ${options?.duration || RIPPLE_DEFAULT_OPTIONS.DURATION}ms ease-in`;
-        const handleAnimationEnd = (e: AnimationEvent) => {
-            if(e.animationName !== ANIMATION_OPACITY) {
-                return;
-            }
-            element.removeChild(span);
-            span.removeEventListener('animationend', handleAnimationEnd);
-        };
-        span.addEventListener('animationend', handleAnimationEnd);
+        document.removeEventListener('mouseup',handleMouseUp);
+
+        const time = Date.now() - timeStamp;
+        const partDuration =  time < duration/3
+            ? duration/3 - time
+            : 0;
+
+        setTimeout(() => {
+            span.style.opacity = '0';
+
+            setTimeout(() => {
+                element.removeChild(span);
+            }, RIPPLE_DEFAULT_DURATION / 2);
+
+        }, partDuration);
     };
-    element.addEventListener('mouseup',handleMouseUp);
+    document.addEventListener('mouseup',handleMouseUp);
 };
 
 export const useRipple = (
@@ -145,7 +123,5 @@ export const useRipple = (
         return () => {
             element.removeEventListener('mousedown', ripple);
         };
-
-
     }, []);
 };
