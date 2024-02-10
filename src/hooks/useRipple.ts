@@ -101,23 +101,20 @@ const createRipple = (
     span.style.animation = `${ANIMATION_SCALE} ${options?.duration || RIPPLE_DEFAULT_OPTIONS.DURATION}ms ease-in`;
     element.appendChild(span);
 
-
-    element.addEventListener('mouseup',() => {
+    const handleMouseUp = () => {
+        element.removeEventListener('mouseup',handleMouseUp);
         span.style.animation += `, ${ANIMATION_OPACITY} ${options?.duration || RIPPLE_DEFAULT_OPTIONS.DURATION}ms ease-in`;
-        span.addEventListener('animationend', (e) => {
+        const handleAnimationEnd = (e: AnimationEvent) => {
             if(e.animationName !== ANIMATION_OPACITY) {
                 return;
             }
-            if(element.contains(span)){
-                element.removeChild(span);
-            }
-
-        });
-    });
-
-
+            element.removeChild(span);
+            span.removeEventListener('animationend', handleAnimationEnd);
+        };
+        span.addEventListener('animationend', handleAnimationEnd);
+    };
+    element.addEventListener('mouseup',handleMouseUp);
 };
-
 
 export const useRipple = (
     ref: RefObject<HTMLElement>,
